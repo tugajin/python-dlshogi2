@@ -11,8 +11,8 @@ parser.add_argument('train_data', type=str, nargs='+', help='training data file'
 parser.add_argument('test_data', type=str, help='test data file')
 parser.add_argument('--gpu', '-g', type=int, default=0, help='GPU ID')
 parser.add_argument('--epoch', '-e', type=int, default=1, help='Number of epoch times')
-parser.add_argument('--batchsize', '-b', type=int, default=1024, help='Number of positions in each mini-batch')
-parser.add_argument('--testbatchsize', type=int, default=1024, help='Number of positions in each test mini-batch')
+parser.add_argument('--batchsize', '-b', type=int, default=128, help='Number of positions in each mini-batch')
+parser.add_argument('--testbatchsize', type=int, default=128, help='Number of positions in each test mini-batch')
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
 parser.add_argument('--checkpoint', default='checkpoints/checkpoint-{epoch:03}.pth', help='checkpoint file name')
 parser.add_argument('--resume', '-r', default='', help='Resume from snapshot')
@@ -98,11 +98,11 @@ for e in range(args.epoch):
     steps_epoch = 0
     sum_loss_policy_epoch = 0
     sum_loss_value_epoch = 0
-    for x, move_label, result in train_dataloader:
+    for x1, x2, move_label, result in train_dataloader:
         model.train()
 
         # 順伝播
-        y1, y2 = model(x)
+        y1, y2 = model(x1, x2)
         # 損失計算
         loss_policy = cross_entropy_loss(y1, move_label)
         loss_value = bce_with_logits_loss(y2, result)
@@ -124,10 +124,10 @@ for e in range(args.epoch):
         if t % args.eval_interval == 0:
             model.eval()
 
-            x, move_label, result = test_dataloader.sample()
+            x1, x2, move_label, result = test_dataloader.sample()
             with torch.no_grad():
                 # 推論
-                y1, y2 = model(x)
+                y1, y2 = model(x1, x2)
                 # 損失計算
                 test_loss_policy = cross_entropy_loss(y1, move_label).item()
                 test_loss_value = bce_with_logits_loss(y2, result).item()
@@ -171,8 +171,8 @@ for e in range(args.epoch):
     sum_test_accuracy_value = 0
     model.eval()
     with torch.no_grad():
-        for x, move_label, result in test_dataloader:
-            y1, y2 = model(x)
+        for x1, x2, move_label, result in test_dataloader:
+            y1, y2 = model(x1, x2)
 
             test_steps += 1
             sum_test_loss_policy += cross_entropy_loss(y1, move_label).item()

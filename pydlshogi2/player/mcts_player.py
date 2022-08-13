@@ -2,7 +2,7 @@
 import torch
 
 from cshogi import Board, BLACK, NOT_REPETITION, REPETITION_DRAW, REPETITION_WIN, REPETITION_SUPERIOR, move_to_usi
-from pydlshogi2.features import FEATURES_NUM, make_input_features, make_move_label
+from cshogi.dlshogi import make_input_features, make_move_label, FEATURES1_NUM, FEATURES2_NUM
 from pydlshogi2.uct.uct_node import NodeTree
 from pydlshogi2.network.policy_value_resnet import PolicyValueNetwork
 from pydlshogi2.player.base_player import BasePlayer
@@ -167,8 +167,11 @@ class MCTSPlayer(BasePlayer):
 
     # 入力特徴量の初期化
     def init_features(self):
-        self.features = torch.empty((self.batch_size, FEATURES_NUM, 9, 9), dtype=torch.float32, pin_memory=(self.gpu_id >= 0))
-
+        #self.features = torch.empty((self.batch_size, FEATURES_NUM, 9, 9), dtype=torch.float32, pin_memory=(self.gpu_id >= 0))
+        self.features = [
+            np.empty((self.batch_size, FEATURES1_NUM, 9, 9), dtype=np.float32, pin_memory=(self.gpu_id >= 0)),
+            np.empty((self.batch_size, FEATURES2_NUM, 9, 9), dtype=np.float32, pin_memory=(self.gpu_id >= 0))
+        ]
     def isready(self):
         # デバイス
         if self.gpu_id >= 0:
@@ -580,7 +583,9 @@ class MCTSPlayer(BasePlayer):
 
     # 入力特徴量の作成
     def make_input_features(self, board):
-        make_input_features(board, self.features.numpy()[self.current_batch_index])
+        make_input_features(board, 
+                            self.features[0][self.current_batch_index].numpy(), 
+                            self.features[1][self.current_batch_index].numpy())
 
     # ノードをキューに追加
     def queue_node(self, board, node):
@@ -594,8 +599,9 @@ class MCTSPlayer(BasePlayer):
     # 推論
     def infer(self):
         with torch.no_grad():
-            x = self.features[0:self.current_batch_index].to(self.device)
-            policy_logits, value_logits = self.model(x)
+            x1 = self.features[0][0:self.current_batch_index].to(self.device)
+            x2 = self.features[1][0:self.current_batch_index].to(self.device)
+            policy_logits, value_logits = self.model(x1, x2)
             return policy_logits.cpu().numpy(), torch.sigmoid(value_logits).cpu().numpy()
 
     # 着手を表すラベル作成

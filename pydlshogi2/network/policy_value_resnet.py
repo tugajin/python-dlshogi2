@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from pydlshogi2.features import FEATURES_NUM, MOVE_PLANES_NUM, MOVE_LABELS_NUM
+from pydlshogi2.features import MOVE_LABELS_NUM, MOVE_PLANES_NUM
+from cshogi.dlshogi import FEATURES1_NUM, FEATURES2_NUM
 
 class Bias(nn.Module):
     def __init__(self, shape):
@@ -33,7 +34,10 @@ class ResNetBlock(nn.Module):
 class PolicyValueNetwork(nn.Module):
     def __init__(self, blocks=10, channels=192, fcl=256):
         super(PolicyValueNetwork, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=FEATURES_NUM, out_channels=channels, kernel_size=3, padding=1, bias=False)
+        self.convl1_1_1 = nn.Conv2d(in_channels=FEATURES1_NUM, out_channels=channels, kernel_size=3, padding=1, bias=False)
+        self.convl1_1_2 = nn.Conv2d(in_channels=FEATURES1_NUM, out_channels=channels, kernel_size=1, padding=0, bias=False)
+        self.convl1_2 = nn.Conv2d(in_channels=FEATURES2_NUM, out_channels=channels, kernel_size=1, bias=False)
+        
         self.norm1 = nn.BatchNorm2d(channels)
 
         # resnet blocks
@@ -49,9 +53,12 @@ class PolicyValueNetwork(nn.Module):
         self.value_fc1 = nn.Linear(MOVE_LABELS_NUM, fcl)
         self.value_fc2 = nn.Linear(fcl, 1)
 
-    def forward(self, x):
-        x = self.conv1(x)
-        x = F.relu(self.norm1(x))
+    def forward(self, feature1, feature2):
+
+        x1_1 = self.convl1_1_1(feature1)
+        x1_2 = self.convl1_1_2(feature1)
+        x2 = self.convl1_2(feature2)
+        x = F.relu(self.norm1(x1_1 + x1_2 + x2))
 
         # resnet blocks
         x = self.blocks(x)
@@ -66,3 +73,7 @@ class PolicyValueNetwork(nn.Module):
         value = self.value_fc2(value)
 
         return policy, value
+
+if __name__ == '__main__':
+    model = PolicyValueNetwork()
+    
