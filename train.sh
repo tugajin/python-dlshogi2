@@ -1,0 +1,1 @@
+python3 -m pydlshogi2.train /media/tugajin/HD-LDF-A/hcpe/hcpe/hcpe-20210815T091142Z-030/hcpe/elmo_teacher_shuffle-001 /media/tugajin/HD-LDF-A/hcpe/hcpe/hcpe-20210815T091142Z-030/hcpe/elmo_teacher_shuffle-007
