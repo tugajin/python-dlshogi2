@@ -73,7 +73,8 @@ class MCTSPlayer(BasePlayer):
     # USIエンジンの名前
     name = 'python-dlshogi2'
     # デフォルトチェックポイント
-    DEFAULT_MODELFILE = 'checkpoints/checkpoint.pth'
+    #DEFAULT_MODELFILE = 'checkpoints/checkpoint.pth'
+    DEFAULT_MODELFILE = 'checkpoints/checkpoint-011.pth'
 
     def __init__(self):
         super().__init__()
@@ -167,10 +168,9 @@ class MCTSPlayer(BasePlayer):
 
     # 入力特徴量の初期化
     def init_features(self):
-        #self.features = torch.empty((self.batch_size, FEATURES_NUM, 9, 9), dtype=torch.float32, pin_memory=(self.gpu_id >= 0))
         self.features = [
-            np.empty((self.batch_size, FEATURES1_NUM, 9, 9), dtype=np.float32, pin_memory=(self.gpu_id >= 0)),
-            np.empty((self.batch_size, FEATURES2_NUM, 9, 9), dtype=np.float32, pin_memory=(self.gpu_id >= 0))
+            torch.empty((self.batch_size, FEATURES1_NUM, 9, 9), dtype=torch.float32, pin_memory=(self.gpu_id >= 0)),
+            torch.empty((self.batch_size, FEATURES2_NUM, 9, 9), dtype=torch.float32, pin_memory=(self.gpu_id >= 0))
         ]
     def isready(self):
         # デバイス
