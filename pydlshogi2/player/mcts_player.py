@@ -1,4 +1,4 @@
-﻿import numpy as np
+import numpy as np
 import torch
 
 from cshogi import Board, BLACK, NOT_REPETITION, REPETITION_DRAW, REPETITION_WIN, REPETITION_SUPERIOR, move_to_usi
@@ -479,14 +479,23 @@ class MCTSPlayer(BasePlayer):
 
     # UCB値が最大の手を求める
     def select_max_ucb_child(self, node):
+        # q = np.divide(node.child_sum_value, node.child_move_count,
+        #     out=np.zeros(len(node.child_move), np.float32),
+        #     where=node.child_move_count != 0)
+        
         q = np.divide(node.child_sum_value, node.child_move_count,
-            out=np.zeros(len(node.child_move), np.float32),
+            out=np.full(len(node.child_move),99999.0, np.float32),
             where=node.child_move_count != 0)
+      
         if node.move_count == 0:
-            u = 1.0
+            ucb = q
         else:
             u = np.sqrt(np.float32(node.move_count)) / (1 + node.child_move_count)
-        ucb = q + self.c_puct * u * node.policy
+            c_base = 39470.0
+            c_init = 1.49
+            c = math.log((node.move_count + c_base + 1.0) / c_base) + c_init
+            #ucb = q + self.c_puct * u * node.policy
+            ucb = q + c * u * node.policy
 
         return np.argmax(ucb)
 
