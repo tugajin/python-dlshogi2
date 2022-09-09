@@ -479,13 +479,13 @@ class MCTSPlayer(BasePlayer):
 
     # UCB値が最大の手を求める
     def select_max_ucb_child(self, node):
-        # q = np.divide(node.child_sum_value, node.child_move_count,
-        #     out=np.zeros(len(node.child_move), np.float32),
-        #     where=node.child_move_count != 0)
-        
         q = np.divide(node.child_sum_value, node.child_move_count,
-            out=np.full(len(node.child_move),99999.0, np.float32),
+            out=np.zeros(len(node.child_move), np.float32),
             where=node.child_move_count != 0)
+        
+        # q = np.divide(node.child_sum_value, node.child_move_count,
+        #     out=np.full(len(node.child_move),99999.0, np.float32),
+        #     where=node.child_move_count != 0)
       
         if node.move_count == 0:
             ucb = q
